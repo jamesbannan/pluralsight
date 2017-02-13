@@ -1,0 +1,18 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-05-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newStorageAccountName": {
+      "value": "chefstorageyi8c9c"
+    },
+    "adminUsername": {
+      "value": "chef"
+    },
+    "adminPassword": {
+      "value": "Ch3fP@55"
+    },
+    "dnsNameForPublicIP": {
+      "value": "chef-lab-yi8c9c"
+    }
+  }
+}
