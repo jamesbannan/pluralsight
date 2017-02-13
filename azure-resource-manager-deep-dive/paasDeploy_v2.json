@@ -1,0 +1,156 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "webAppSkuName": {
+      "type": "string",
+      "defaultValue": "S1",
+      "allowedValues": [
+        "F1",
+        "D1",
+        "B1",
+        "B2",
+        "B3",
+        "S1",
+        "S2",
+        "S3",
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "metadata": {
+        "description": "Describes plan's pricing tier and instance size. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+      }
+    },
+    "webAppSkuCapacity": {
+      "type": "int",
+      "defaultValue": 1,
+      "minValue": 1,
+      "metadata": {
+        "description": "Describes plan's instance count"
+      }
+    },
+    "webAppDnsNamePrefix": {
+      "type": "string",
+      "defaultValue": "unicorner",
+      "metadata": {
+        "description": "Relative DNS name for the WebApps, must be globally unique.  An index will be appended for each Web App."
+      }
+    },
+    "webAppLocation": {
+      "type": "array"
+    },
+    "webAppCount": {
+      "type": "int",
+      "defaultValue": 4
+    }
+  },
+  "variables": {  },
+  "resources": [
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[concat(parameters('webAppDnsNamePrefix'),'-farm-',copyIndex())]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[parameters('webAppLocation')[copyIndex()]]",
+      "copy": {
+        "count": "[parameters('webAppCount')]",
+        "name": "farmCopy"
+      },
+      "tags": {
+        "displayName": "[concat(parameters('webAppDnsNamePrefix'),'-',copyIndex())]"
+      },
+      "sku": {
+        "name": "[parameters('webAppSkuName')]",
+        "capacity": "[parameters('webAppSkuCapacity')]"
+      },
+      "properties": {
+        "name": "[concat(parameters('webAppDnsNamePrefix'),'-farm-',copyIndex())]"
+      }
+    },
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[concat(parameters('webAppDnsNamePrefix'),'-site-',copyIndex())]",
+      "type": "Microsoft.Web/sites",
+      "location": "[parameters('webAppLocation')[copyIndex()]]",
+      "copy": {
+        "count": "[parameters('webAppCount')]",
+        "name": "siteCopy"
+      },
+      "dependsOn": [
+        "farmCopy"
+      ],
+      "tags": {
+        "[concat('hidden-related:', resourceId('Microsoft.Web/serverfarms', concat(parameters('webAppDnsNamePrefix'),'-farm-',copyIndex())))]": "empty",
+        "displayName": "[concat(parameters('webAppDnsNamePrefix'),'-site-',copyIndex())]"
+      },
+      "properties": {
+        "name": "[concat(parameters('webAppDnsNamePrefix'),'-site-',copyIndex())]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('webAppDnsNamePrefix'),'-farm-',copyIndex()))]"
+      },
+      "resources": [
+
+      ]
+    },
+    {
+      "apiVersion": "2015-11-01",
+      "type": "Microsoft.Network/trafficManagerProfiles",
+      "name": "[concat(parameters('webAppDnsNamePrefix'),'-tm')]",
+      "location": "global",
+      "dependsOn": [
+        "siteCopy"
+      ],
+      "properties": {
+        "profileStatus": "Enabled",
+        "trafficRoutingMethod": "Priority",
+        "dnsConfig": {
+          "relativeName": "[concat(parameters('webAppDnsNamePrefix'),'-tm')]",
+          "ttl": 30
+        },
+        "monitorConfig": {
+          "protocol": "http",
+          "port": 80,
+          "path": "/"
+        },
+        "endpoints": [
+          {
+            "name": "[concat(parameters('webAppDnsNamePrefix'),'-endpoint-','0')]",
+            "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+            "properties": {
+              "targetResourceId": "[resourceId('Microsoft.Web/sites/',concat(parameters('webAppDnsNamePrefix'),'-site-','0'))]",
+              "endpointStatus": "Enabled",
+              "priority": 1
+            }
+          },
+          {
+            "name": "[concat(parameters('webAppDnsNamePrefix'),'-endpoint-','1')]",
+            "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+            "properties": {
+              "targetResourceId": "[resourceId('Microsoft.Web/sites/',concat(parameters('webAppDnsNamePrefix'),'-site-','1'))]",
+              "endpointStatus": "Enabled",
+              "priority": 2
+            }
+          },
+          {
+            "name": "[concat(parameters('webAppDnsNamePrefix'),'-endpoint-','2')]",
+            "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+            "properties": {
+              "targetResourceId": "[resourceId('Microsoft.Web/sites/',concat(parameters('webAppDnsNamePrefix'),'-site-','2'))]",
+              "endpointStatus": "Enabled",
+              "priority": 3
+            }
+          },
+          {
+            "name": "[concat(parameters('webAppDnsNamePrefix'),'-endpoint-','3')]",
+            "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+            "properties": {
+              "targetResourceId": "[resourceId('Microsoft.Web/sites/',concat(parameters('webAppDnsNamePrefix'),'-site-','3'))]",
+              "endpointStatus": "Enabled",
+              "priority": 4
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the virtual network."
+      }
+    },
+    "deploymentType": {
+      "type": "string",
+      "allowedValues": [ "dev", "prod" ],
+      "defaultValue": "dev",
+      "metadata": {
+        "description": "String to determine which network the VM is deployed to."
+      }
+    },
+    "vNetApiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure API for virtual network."
+      }
+    },
+    "vNetRange": {
+      "type": "string",
+      "metadata": {
+        "description": "IP range of the virtual network."
+      }
+    },
+    "subnetProdRange": {
+      "type": "string",
+      "metadata": {
+        "description": "IP range of first subnet."
+      }
+    },
+    "subnetDevRange": {
+      "type": "string",
+      "metadata": {
+        "description": "IP range of second subnet."
+      }
+    }
+  },
+  "variables": {
+    "subnetProdName": "subnet-prod",
+    "subnetDevName": "subnet-dev",
+    "vNetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetName'))]",
+    "vNetSubnetID": "[concat(variables('vNetID'), '/subnets/', 'subnet-', parameters('deploymentType'))]"
+  },
+  "resources": [
+    {
+      "name": "[parameters('vNetName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[parameters('vNetApiVersion')]",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "[parameters('vNetName')]"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vNetRange')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetProdName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetProdRange')]"
+            }
+          },
+          {
+            "name": "[variables('subnetDevName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetDevRange')]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "subnetID": {
+      "type": "string",
+      "value": "[variables('vNetSubnetID')]"
+    }
+  }
+}

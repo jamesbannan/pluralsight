@@ -1,0 +1,123 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmNamePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the virtual machine."
+      }
+    },
+    "vmApiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure API for the VM deployment."
+      }
+    },
+    "deploymentType": {
+      "type": "string",
+      "allowedValues": [ "dev", "prod" ],
+      "defaultValue": "dev",
+      "metadata": {
+        "description": "String to determine which network the VM is deployed to."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual machine instance size."
+      }
+    },
+    "vmAdminUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "Username of the local admin account."
+      }
+    },
+    "vmAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for the local admin account."
+      }
+    },
+    "vmImagePublisher": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual machine image publisher."
+      }
+    },
+    "vmImageOffer": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual machine image offer."
+      }
+    },
+    "vmWindowsOSVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual machine image SKU."
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Storage account to store virtual machine disks."
+      }
+    },
+    "vmNic": {
+      "type": "string",
+      "metadata": {
+        "description": "Network interface for the virtual machine."
+      }
+    }
+  },
+  "variables": {
+    "vmName": "[concat(parameters('vmNamePrefix'),'-',parameters('deploymentType'))]",
+    "vmOSDiskName": "[concat(variables('vmName'),'-','osdisk')]"
+  },
+  "resources": [
+    {
+      "name": "[variables('vmName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[parameters('vmApiVersion')]",
+      "tags": {
+        "displayName": "[variables('vmName')]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('vmAdminUserName')]",
+          "adminPassword": "[parameters('vmAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[parameters('vmImagePublisher')]",
+            "offer": "[parameters('vmImageOffer')]",
+            "sku": "[parameters('vmWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[variables('vmOSDiskName')]",
+            "vhd": {
+              "uri": "[concat('http://', parameters('storageAccountName'), '.blob.core.windows.net/', parameters('deploymentType'), '/', variables('vmOSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[parameters('vmNic')]"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
