@@ -1,13 +1,13 @@
 ﻿
 ### Define Deployment Variables
 
-$resourceGroupName = 'pluralsight-arm-simple-paas'
+$resourceGroupName = 'contoso-simple-paas'
 $resourceProviderNamespace = 'Microsoft.Web'
 $resourceTypeName = 'sites'
 $resourceGroupLocation = 'Australia Southeast'
 
 $randomString = ([char[]]([char]'a'..[char]'z') + 0..9 | Sort-Object {Get-Random})[0..8] -join ''
-$appNamePrefix = 'pluralsight'
+$appNamePrefix = 'contoso'
 $appServicePlanName = $appNamePrefix + $randomString
 $webAppName = $appNamePrefix + $randomString
 
