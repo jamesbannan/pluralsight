@@ -1,0 +1,641 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountType": {
+      "type": "array",
+      "defaultValue": [ "Standard_LRS", "Standard_LRS", "Standard_GRS" ]
+    },
+    "storageAccountNamePrefix": {
+      "type": "string",
+      "defaultValue": "contoso",
+      "minLength": 1
+    },
+    "vNetPrivateName": {
+      "type": "string",
+      "defaultValue": "contoso-vnet-private",
+      "minlength": 1
+    },
+    "vNetAzureName": {
+      "type": "string",
+      "defaultValue": "contoso-vnet-azure",
+      "minlength": 1
+    },
+    "vpnPrivateConnectionName": {
+      "type": "string",
+      "defaultValue": "contoso-vpn-private",
+      "minlength": 1
+    },
+    "vpnAzureConnectionName": {
+      "type": "string",
+      "defaultValue": "contoso-vpn-azure",
+      "minlength": 1
+    },
+    "privateGatewayName": {
+      "type": "string",
+      "defaultValue": "contoso-gateway-private",
+      "minlength": 1
+    },
+    "azureGatewayName": {
+      "type": "string",
+      "defaultValue": "contoso-gateway-azure",
+      "minlength": 1
+    },
+    "vpnSharedKey": {
+      "type": "string",
+      "defaultValue": "asodgfhjkaw4tu0w9vuijv0qu3409tu",
+      "minLength": 10
+    },
+    "privateGatewayPublicIpName": {
+      "type": "string",
+      "defaultValue": "contoso-gateway-private-ip",
+      "minLength": 1
+    },
+    "azureGatewayPublicIpName": {
+      "type": "string",
+      "defaultValue": "contoso-gateway-azure-ip",
+      "minLength": 1
+    },
+    "vpnType": {
+      "type": "string",
+      "defaultValue": "RouteBased",
+      "allowedValues": [
+        "RouteBased",
+        "PolicyBased"
+      ]
+    },
+    "vmPrivateName": {
+      "type": "string",
+      "defaultValue": "vmPrivate",
+      "minLength": 1
+    },
+    "vmAdminUserName": {
+      "type": "string",
+      "defaultValue": "vmAdmin",
+      "minLength": 1
+    },
+    "vmAdminPassword": {
+      "type": "securestring"
+    },
+    "vmWindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2016-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "2016-Datacenter"
+      ]
+    },
+    "vmPrivatePublicIPDnsName": {
+      "type": "string",
+      "defaultValue": "contoso-vm",
+      "minLength": 1
+    },
+    "as-vmWebName": {
+      "type": "string",
+      "defaultValue": "as-vmWeb",
+      "minLength": 1
+    },
+    "vmWebIISDSCModule": {
+      "type": "string",
+      "defaultValue": "https://github.com/Azure/azure-quickstart-templates/raw/master/dsc-extension-iis-server-windows-vm/ContosoWebsite.ps1.zip"
+    },
+    "vmWebIISDSCFunction": {
+      "type": "string",
+      "defaultValue": "ContosoWebsite.ps1\\ContosoWebsite"
+    },
+    "vmWebLoadBalancerName": {
+      "type": "string",
+      "defaultValue": "contoso-web-lb",
+      "minlength": 1
+    }
+  },
+  "variables": {
+    "vNetPrivatePrefix": "172.16.0.0/16",
+    "vNetPrivateSubnet1Name": "private-subnet-1",
+    "vNetPrivateSubnet1Prefix": "172.16.1.0/24",
+    "vNetPrivateSubnet2Name": "private-subnet-2",
+    "vNetPrivateSubnet2Prefix": "172.16.2.0/24",
+    "vNetPrivateGatewayPrefix": "172.16.200.0/24",
+    "vNetAzurePrefix": "10.0.0.0/16",
+    "vNetAzureSubnet1Name": "azure-subnet-1",
+    "vNetAzureSubnet1Prefix": "10.0.1.0/24",
+    "vNetAzureSubnet2Name": "azure-subnet-2",
+    "vNetAzureSubnet2Prefix": "10.0.2.0/24",
+    "vNetAzureGatewayPrefix": "10.0.200.0/24",
+    "vNetPrivateId": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vNetPrivateName'))]",
+    "privateGatewaySubnetId": "[concat(variables('vNetPrivateId'),'/subnets/','GatewaySubnet')]",
+    "privatePublicIpId": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('privateGatewayPublicIpName'))]",
+    "vNetAzureId": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vNetAzureName'))]",
+    "azureGatewaySubnetId": "[concat(variables('vNetAzureId'),'/subnets/','GatewaySubnet')]",
+    "azurePublicIpId": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('azureGatewayPublicIpName'))]",
+    "vmImagePublisher": "MicrosoftWindowsServer",
+    "vmImageOffer": "WindowsServer",
+    "vmPrivateOSDiskName": "vmPrivateOSDisk",
+    "vmSize": "Standard_D2_v2",
+    "vmPrivateVnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetPrivateName'))]",
+    "vmPrivateSubnetRef": "[concat(variables('vmPrivateVnetID'), '/subnets/', variables('vNetPrivateSubnet1Name'))]",
+    "vmStorageAccountContainerName": "vhds",
+    "vmPrivateNicName": "[concat(parameters('vmPrivateName'),'-','nic-0')]",
+    "vmPrivatePublicIPName": "vmPrivatePublicIP",
+    "vmWebVnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetAzureName'))]",
+    "vmWebSubnetRef": "[concat(variables('vmWebVnetID'), '/subnets/', variables('vNetAzureSubnet1Name'))]"
+  },
+  "resources": [
+    {
+      "name": "[concat(parameters('storageAccountNamePrefix'),copyIndex(),uniqueString(resourceGroup().id))]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "copy": {
+        "count": "[length(parameters('storageAccountType'))]",
+        "name": "storageCopy"
+      },
+      "sku": {
+        "name": "[parameters('storageAccountType')[copyIndex()]]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "[concat(parameters('storageAccountNamePrefix'),copyIndex(),uniqueString(resourceGroup().id))]"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "[parameters('vNetPrivateName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "[parameters('vNetPrivateName')]"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('vNetPrivatePrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('vNetPrivateSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('vNetPrivateSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('vNetPrivateSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('vNetPrivateSubnet2Prefix')]"
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "[variables('vNetPrivateGatewayPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('vNetAzureName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "[parameters('vNetAzureName')]"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('vNetAzurePrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('vNetAzureSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('vNetAzureSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('vNetAzureSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('vNetAzureSubnet2Prefix')]"
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "[variables('vNetAzureGatewayPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('vpnPrivateConnectionName')]",
+      "type": "Microsoft.Network/connections",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworkgateways/',parameters('privateGatewayName'))]",
+        "[concat('Microsoft.Network/virtualNetworkgateways/',parameters('azureGatewayName'))]"
+      ],
+      "properties": {
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkgateways/',parameters('privateGatewayName'))]"
+        },
+        "virtualNetworkGateway2": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkgateways/',parameters('azureGatewayName'))]"
+        },
+        "connectionType": "VNet2VNet",
+        "routingWeight": 3,
+        "sharedKey": "[parameters('vpnSharedKey')]"
+      }
+    },
+    {
+      "name": "[parameters('vpnAzureConnectionName')]",
+      "type": "Microsoft.Network/connections",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworkgateways/',parameters('privateGatewayName'))]",
+        "[concat('Microsoft.Network/virtualNetworkgateways/',parameters('azureGatewayName'))]"
+      ],
+      "properties": {
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkgateways/',parameters('azureGatewayName'))]"
+        },
+        "virtualNetworkGateway2": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkgateways/',parameters('privateGatewayName'))]"
+        },
+        "connectionType": "VNet2VNet",
+        "routingWeight": 3,
+        "sharedKey": "[parameters('vpnSharedKey')]"
+      }
+    },
+    {
+      "name": "[parameters('privateGatewayName')]",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/',parameters('privateGatewayPublicIpName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/',parameters('vNetPrivateName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('privateGatewaySubnetId')]"
+              },
+              "publicIPAddress": {
+                "id": "[variables('privatePublicIpId')]"
+              }
+            },
+            "name": "vNetGatewayConfig"
+          }
+        ],
+        "gatewayType": "Vpn",
+        "vpnType": "[parameters('vpnType')]",
+        "enableBgp": "false"
+      }
+    },
+    {
+      "name": "[parameters('azureGatewayName')]",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/',parameters('azureGatewayPublicIpName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/',parameters('vNetAzureName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('azureGatewaySubnetId')]"
+              },
+              "publicIPAddress": {
+                "id": "[variables('azurePublicIpId')]"
+              }
+            },
+            "name": "vNetGatewayConfig"
+          }
+        ],
+        "gatewayType": "Vpn",
+        "vpnType": "[parameters('vpnType')]",
+        "enableBgp": "false"
+      }
+    },
+    {
+      "name": "[parameters('privateGatewayPublicIpName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "name": "[parameters('azureGatewayPublicIpName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "name": "[variables('vmPrivateNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetPrivateName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmPrivatePublicIPName'))]"
+      ],
+      "tags": {
+        "displayName": "[variables('vmPrivateNicName')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('vmPrivateSubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmPrivatePublicIPName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('vmPrivateName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "storageCopy",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('vmPrivateNicName'))]"
+      ],
+      "tags": {
+        "displayName": "vmPrivate"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('vmPrivateName')]",
+          "adminUsername": "[parameters('vmAdminUsername')]",
+          "adminPassword": "[parameters('vmAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('vmImagePublisher')]",
+            "offer": "[variables('vmImageOffer')]",
+            "sku": "[parameters('vmWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "vmPrivateOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', concat(parameters('storageAccountNamePrefix'),'0',uniqueString(resourceGroup().id))), '2016-01-01').primaryEndpoints.blob, variables('vmStorageAccountContainerName'), '/', variables('vmPrivateOSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('vmPrivateNicName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "[variables('vmPrivatePublicIPName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "vmPrivatePublicIP"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('vmPrivatePublicIPDnsName')]"
+        }
+      }
+    },
+    {
+      "name": "[concat('vmWeb','-',copyIndex(),'-nic-0')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "copy": {
+        "count": 2,
+        "name": "vmWebNicCopy"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetAzureName'))]",
+        "[concat('Microsoft.Network/loadBalancers/', parameters('vmWebLoadBalancerName'))]"
+      ],
+      "tags": {
+        "displayName": "[concat('vmWeb','-',copyIndex(),'-nic-0')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('vmWebSubnetRef')]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers',parameters('vmWebLoadBalancerName')),'/backendAddressPools/BackendPool1')]"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[concat('vmWeb','-',copyIndex())]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "copy": {
+        "count": 2,
+        "name": "vmWebCopy"
+      },
+      "dependsOn": [
+        "storageCopy",
+        "vmWebNicCopy",
+        "[concat('Microsoft.Compute/availabilitySets/','as-vmWeb')]"
+      ],
+      "tags": {
+        "displayName": "[concat('vmWeb','-',copyIndex())]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets/','as-vmWeb')]"
+        },
+        "osProfile": {
+          "computerName": "[concat('vmWeb','-',copyIndex())]",
+          "adminUsername": "[parameters('vmAdminUsername')]",
+          "adminPassword": "[parameters('vmAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('vmImagePublisher')]",
+            "offer": "[variables('vmImageOffer')]",
+            "sku": "[parameters('vmWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat('vmWeb','-',copyIndex(),'-','osDisk')]",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', concat(parameters('storageAccountNamePrefix'),copyIndex(),uniqueString(resourceGroup().id))), '2016-01-01').primaryEndpoints.blob, variables('vmStorageAccountContainerName'), '/', 'vmWeb','-',copyIndex(),'-','osDisk', '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('vmWeb','-',copyIndex(),'-nic-0'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "name": "IIS",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2015-06-15",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', concat('vmWeb','-',copyIndex()))]"
+          ],
+          "tags": {
+            "displayName": "IIS"
+          },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.19",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "modulesUrl": "[parameters('vmWebIISDSCModule')]",
+              "configurationFunction": "[parameters('vmWebIISDSCFunction')]",
+              "Properties": {
+                "MachineName": "[concat('vmWeb','-',copyIndex())]"
+              }
+            },
+            "protectedSettings": { }
+          }
+        }
+      ]
+    },
+    {
+      "name": "[parameters('as-vmWebName')]",
+      "type": "Microsoft.Compute/availabilitySets",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "[parameters('as-vmWebName')]"
+      },
+      "properties": {
+        "platformUpdateDomainCount": 2,
+        "platformFaultDomainCount": 2
+      }
+    },
+    {
+      "name": "[parameters('vmWebLoadBalancerName')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[parameters('vNetAzureName')]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "properties": {
+              "subnet": {
+                "id": "[variables('vmWebSubnetRef')]"
+              },
+              "privateIPAddress": "10.0.1.20",
+              "privateIPAllocationMethod": "Static"
+            },
+            "name": "LoadBalancerFrontend"
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "BackendPool1"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',parameters('vmWebLoadBalancerName')),'/frontendIpConfigurations/LoadBalancerFrontEnd')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',parameters('vmWebLoadBalancerName')),'/backendAddressPools/BackendPool1')]"
+              },
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',parameters('vmWebLoadBalancerName')),'/probes/lbprobe')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 80,
+              "backendPort": 80,
+              "idleTimeoutInMinutes": 15
+            },
+            "name": "lbRule"
+          }
+        ],
+        "probes": [
+          {
+            "properties": {
+              "protocol": "Tcp",
+              "port": 80,
+              "intervalInSeconds": 15,
+              "numberofProbes": 2
+            },
+            "name": "lbprobe"
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+
+  }
+}
