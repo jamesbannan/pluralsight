@@ -1,0 +1,83 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "templatestorageType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "templateStorageNamePrefix": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "storage"
+    }
+
+  },
+  "variables": {
+    "vnet-templatePrefix": "10.0.0.0/16",
+    "vnet-templateSubnet1Name": "Subnet-1",
+    "vnet-templateSubnet1Prefix": "10.0.0.0/24",
+    "vnet-templateSubnet2Name": "Subnet-2",
+    "vnet-templateSubnet2Prefix": "10.0.1.0/24",
+    "templatestorageName": "[concat(parameters('templateStorageNamePrefix'), uniqueString(resourceGroup().id))]"
+
+  },
+  "resources": [
+    {
+      "name": "vnet-template",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "vnet-template"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('vnet-templatePrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('vnet-templateSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('vnet-templateSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('vnet-templateSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('vnet-templateSubnet2Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('templatestorageName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('templatestorageType')]"
+      },
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "[variables('templatestorageName')]"
+      },
+      "kind": "Storage"
+    }
+
+  ],
+  "outputs": {
+
+  }
+}
