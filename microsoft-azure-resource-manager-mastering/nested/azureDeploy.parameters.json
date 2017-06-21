@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "baseTemplateUri": {
-      "value": "https://steamstorage01.blob.core.windows.net/resources"
+      "value": "https://raw.githubusercontent.com/jamesbannan/pluralsight/master/microsoft-azure-resource-manager-mastering/nested"
     },
     "nestedDeploymentNameVnet": {
       "value": "deploy-virtual-network"
@@ -62,13 +62,13 @@
     "vmAdminPassword": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/8c15b385-5593-495b-bfe6-b1d62f0eb0e4/resourceGroups/pluralsight-keyvault/providers/Microsoft.KeyVault/vaults/pluralsight-vault"
+          "id": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/contoso-keyvault/providers/Microsoft.KeyVault/vaults/contoso-vault"
         },
         "secretName": "vmAdminPassword"
       }
     },
     "vmWindowsOSVersion": {
-      "value": "2012-R2-Datacenter"
+      "value": "2016-Datacenter"
     },
     "sharedTemplateNamePublicIp": {
       "value": "publicIP.json"
