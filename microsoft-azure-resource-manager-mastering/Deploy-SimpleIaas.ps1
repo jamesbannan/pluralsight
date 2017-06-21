@@ -1,6 +1,6 @@
 ﻿
 ### Define Deployment Variables
-
+{
 $resourceGroupName = 'contoso-simple-iaas'
 $resourceProviderNamespace = 'Microsoft.Network'
 $resourceTypeName = 'virtualNetworks'
@@ -17,6 +17,7 @@ $randomString = ([char[]]([char]'a'..[char]'z') + 0..9 | Sort-Object {Get-Random
 $storageAccountNamePrefix = 'storage'
 $storageAccountType = 'Standard_LRS'
 $storageAccountName = $storageAccountNamePrefix + ($storageAccountType.Replace('Standard_','')).ToLower() + $randomString
+}
 
 ### Get ARM Provider Locations
 {
@@ -58,7 +59,7 @@ $vNet = New-AzureRmVirtualNetwork `
     -Verbose -Force
 }
 
-### 
+### Create Storage Account
 {
 $storageAccount = New-AzureRmStorageAccount `
     -ResourceGroupName $resourceGroup.ResourceGroupName `

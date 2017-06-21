@@ -1,5 +1,6 @@
 ﻿
 ### Define Deployment Variables
+{
 
 $resourceGroupName = 'contoso-simple-paas'
 $resourceProviderNamespace = 'Microsoft.Web'
@@ -10,6 +11,8 @@ $randomString = ([char[]]([char]'a'..[char]'z') + 0..9 | Sort-Object {Get-Random
 $appNamePrefix = 'contoso'
 $appServicePlanName = $appNamePrefix + $randomString
 $webAppName = $appNamePrefix + $randomString
+
+}
 
 ### Get ARM Provider Locations
 {
