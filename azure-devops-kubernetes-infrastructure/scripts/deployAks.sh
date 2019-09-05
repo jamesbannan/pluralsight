@@ -21,13 +21,22 @@ timestamp=$(date -u +%FT%TZ | tr -dc '[:alnum:]\n\r')
 name="$(echo $group | jq .name -r)-${timestamp}"
 deployment=$(az group deployment create --resource-group $(echo $group | jq .name -r) --name ${name} --template-file ${templateFile} --verbose)
 
-# Deploy basic AKS environment
+### Deploy AKS environment
 clusterName='demoCluster'
+
+# Create Service Principal
+spName=sp-aks-${clusterName}
+sp=$(az ad sp create-for-rbac --name ${spName})
+
+# Deploy AKS Cluster
+
 logAnalyticsId=$(echo $deployment | jq .properties.outputs.workspaceResourceId.value -r)
 az aks create \
     --resource-group $(echo $group | jq .name -r) \
     --location $(echo $group | jq .location -r) \
     --name ${clusterName} \
+    --service-principal $(echo $sp | jq .appId -r) \
+    --client-secret $(echo $sp | jq .password -r) \
     --node-count 1 \
     --node-vm-size Standard_DS1_v2 \
     --enable-addons monitoring \
