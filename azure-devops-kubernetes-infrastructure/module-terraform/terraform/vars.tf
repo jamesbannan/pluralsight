@@ -20,3 +20,7 @@ variable log_analytics_workspace_sku {
     description = "The pricing SKU of the Log Analytics workspace."
     default     = "PerGB2018"
 }
+variable aks_cluster_name {
+    description = "The name of the AKS cluster resource."
+    default     = "demoCluster"
+}
