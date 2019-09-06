@@ -28,6 +28,5 @@ terraform plan -out=${planName}
 terraform apply -auto-approve ${planName}
 
 # Get kube-config
-kubeConfigName='demo-aks'
-echo "$(terraform output kube_config)" > ./${kubeConfigName}
-export KUBECONFIG=./${kubeConfigName}
+kubeConfigName='config'
+echo "$(terraform output kube_config)" > $HOME/.kube/${kubeConfigName}
