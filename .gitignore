@@ -30,3 +30,9 @@ override.tf.json
 
 # Temporary file to store kube-config TF output
 demo-aks
+
+# Requirements lock files for Helm charts
+requirements.lock
+
+# Downloaded Helm charts
+*.tgz
