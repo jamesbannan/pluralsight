@@ -24,3 +24,7 @@ variable aks_cluster_name {
     description = "The name of the AKS cluster resource."
     default     = "demoCluster"
 }
+variable "public_ssh_key_path" {
+    description = "The Path at which your Public SSH Key is located. Defaults to ~/.ssh/id_rsa.pub"
+    default     = "~/.ssh/id_rsa.pub"
+}
