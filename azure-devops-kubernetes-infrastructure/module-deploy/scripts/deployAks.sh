@@ -42,6 +42,7 @@ az aks create \
     --enable-addons monitoring \
     --generate-ssh-keys \
     --workspace-resource-id ${logAnalyticsId} \
+    --disable-rbac \
     --verbose
 
 # Get AKS Credentials
