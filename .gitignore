@@ -40,3 +40,4 @@ requirements.lock
 # Chef-specific file types
 *.pem
 knife.rb
+**/.chef/syntaxcache
