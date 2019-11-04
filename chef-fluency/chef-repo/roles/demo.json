@@ -1,0 +1,11 @@
+{
+    "name": "demo",
+    "chef_type": "role",
+    "json_class": "Chef::Role",
+    "default_attributes": {
+    },
+    "description": "A simple demonstration role.",
+    "run_list": [
+      "recipe[helloworld::default]"
+    ]
+  }
