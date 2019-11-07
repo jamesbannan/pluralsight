@@ -3,14 +3,19 @@
 # The InSpec reference, with examples and extensive documentation, can be
 # found at https://www.inspec.io/docs/reference/resources/
 
-unless os.windows?
-  # This is an example test, replace with your own test.
-  describe user('root'), :skip do
-    it { should exist }
-  end
-end
+packages = [
+    'ack',
+    'silversearcher-ag',
+    'htop',
+    'jq',
+    'pydf',
+    'unzip'
+]
 
-# This is an example test, replace it with your own test.
-describe port(80), :skip do
-  it { should_not be_listening }
+if os.debian?
+  packages.each do |name|
+    describe package(name) do
+      it { should be_installed }
+    end
+  end
 end
