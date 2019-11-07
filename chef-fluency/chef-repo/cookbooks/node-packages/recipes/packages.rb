@@ -13,8 +13,10 @@ packages = [
     'unzip'
 ]
 
-packages.each do |name|
-  package name do
-    action :upgrade
+if platform_family?("debian")
+  packages.each do |name|
+    package name do
+      action :upgrade
+    end
   end
 end
