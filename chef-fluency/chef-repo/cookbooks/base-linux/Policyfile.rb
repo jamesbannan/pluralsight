@@ -14,3 +14,4 @@ run_list 'base-linux::default'
 
 # Specify a custom source for a single cookbook:
 cookbook 'base-linux', path: '.'
+cookbook 'os-hardening', '= 4.0.0'
