@@ -40,7 +40,7 @@ resource "azurerm_container_registry" "acr" {
     resource_group_name      = azurerm_resource_group.iot.name
     location                 = azurerm_resource_group.iot.location
     sku                      = "Standard"
-    admin_enabled            = false
+    admin_enabled            = true
 
     lifecycle {
         ignore_changes = [
