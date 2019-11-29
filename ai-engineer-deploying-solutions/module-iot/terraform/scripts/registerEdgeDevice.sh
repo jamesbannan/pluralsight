@@ -1,9 +1,9 @@
 ### Register Azure VM as IoT Edge device
 
 ### Define variables
-RESOURCE_GROUP=${1}
-IOT_HUB=${2}
-VM_NAME=${3}
+RESOURCE_GROUP="${1}"
+IOT_HUB="${2}"
+VM_NAME="${3}"
 
 ### Get resources
 hub=$(az iot hub show --name ${IOT_HUB})
@@ -19,4 +19,4 @@ az vm run-command invoke \
 --resource-group ${RESOURCE_GROUP} \
 --name ${VM_NAME} \
 --command-id RunShellScript \
---script "/etc/iotedge/configedge.sh \'${deviceString}\''"
+--script "/etc/iotedge/configedge.sh \"${deviceString}\""
