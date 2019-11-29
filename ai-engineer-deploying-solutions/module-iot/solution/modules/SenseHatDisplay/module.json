@@ -1,0 +1,16 @@
+{
+    "$schema-version": "0.0.1",
+    "description": "",
+    "image": {
+        "repository": "$CONTAINER_REGISTRY_ADDRESS/sensehatdisplay",
+        "tag": {
+            "version": "0.2.12",
+            "platforms": {
+                "arm32v7": "./arm32v7.Dockerfile",
+                "test-arm32v7": "./test/test-arm32v7.Dockerfile"
+            }
+        },
+        "buildOptions": []
+    },
+    "language": "python"
+}
