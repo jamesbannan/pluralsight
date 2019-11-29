@@ -15,7 +15,7 @@ resource "azurerm_virtual_machine" "iot-edge" {
     }
 
     network_interface_ids   = ["${azurerm_network_interface.iot-edge-nic.id}"]
-    vm_size                 = "Standard_DS1_v2"
+    vm_size                 = "Standard_DS2_v2"
 
     delete_os_disk_on_termination       = true
     delete_data_disks_on_termination    = true
