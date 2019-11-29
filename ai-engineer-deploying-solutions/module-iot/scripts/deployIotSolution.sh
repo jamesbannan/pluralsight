@@ -1,3 +1,12 @@
+### Check Aure CLI extension
+az extension list
+extensions=( azure-cli-iot-ext )
+
+for i in "${extensions[@]}"
+do
+	az extension add --name ${i} --verbose
+done
+
 # Get Remote State Storage Account details
 tfstateRg='iot-tfstate'
 tfstateAccount=$(az storage account list --resource-group ${tfstateRg} | jq .[0])
