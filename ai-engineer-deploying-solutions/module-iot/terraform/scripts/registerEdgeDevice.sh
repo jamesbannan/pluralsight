@@ -19,4 +19,4 @@ az vm run-command invoke \
 --resource-group ${RESOURCE_GROUP} \
 --name ${VM_NAME} \
 --command-id RunShellScript \
---script "/etc/iotedge/configedge.sh ${deviceString}"
+--script "/etc/iotedge/configedge.sh \'${deviceString}\''"
