@@ -1,4 +1,4 @@
-### Check Aure CLI extension
+### Check Azure CLI extension
 az extension list
 extensions=( azure-cli-iot-ext )
 
