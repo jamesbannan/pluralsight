@@ -9,9 +9,9 @@ done
 
 # Get Remote State Storage Account details
 tfstateRg='iot-tfstate'
-tfstateAccount=$(az storage account list --resource-group ${tfstateRg} | jq .[0])
+tfstateAccount=$(az storage account list --resource-group ${tfstateRg} | jq '[.[]][0]')
 tfstateAccountName=$(echo $tfstateAccount | jq .name -r)
-tfstateAccountKey=$(az storage account keys list --resource-group ${tfstateRg} --account-name ${tfstateAccountName} | jq .[0].value -r)
+tfstateAccountKey=$(az storage account keys list --resource-group ${tfstateRg} --account-name ${tfstateAccountName} | jq '[.[]][0].value' -r)
 tfstateContainer='tfstate'
 tfstateKeyName='key=pluralsight-iot.tfstate'
 
