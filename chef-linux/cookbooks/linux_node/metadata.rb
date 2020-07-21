@@ -1,6 +1,6 @@
 name 'linux_node'
-maintainer 'The Authors'
-maintainer_email 'you@example.com'
+maintainer 'James Bannan'
+maintainer_email 'james@myemail.com'
 license 'All Rights Reserved'
 description 'Installs/Configures linux_node'
 version '0.1.0'

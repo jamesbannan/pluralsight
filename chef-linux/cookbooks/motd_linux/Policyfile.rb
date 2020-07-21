@@ -14,3 +14,5 @@ run_list 'motd_linux::default'
 
 # Specify a custom source for a single cookbook:
 cookbook 'motd_linux', path: '.'
+cookbook 'motd', '~> 1.0.1', :supermarket
+cookbook 'motd_chef_status', '~> 1.0.3', :supermarket

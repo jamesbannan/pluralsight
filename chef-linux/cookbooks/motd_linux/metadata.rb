@@ -1,6 +1,6 @@
 name 'motd_linux'
-maintainer 'The Authors'
-maintainer_email 'you@example.com'
+maintainer 'James Bannan'
+maintainer_email 'james@myemail.com'
 license 'All Rights Reserved'
 description 'Installs/Configures motd_linux'
 version '0.1.0'
@@ -17,3 +17,6 @@ chef_version '>= 15.0'
 # a Supermarket.
 #
 # source_url 'https://github.com/<insert_org_here>/motd_linux'
+
+depends 'motd', '~> 1.0.1'
+depends 'motd_chef_status', '~> 1.0.3'
