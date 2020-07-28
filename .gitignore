@@ -43,4 +43,6 @@ knife.rb
 **/.chef/syntaxcache
 *.lock.json
 
+**/output/*
+
 .DS_Store
