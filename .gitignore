@@ -41,5 +41,6 @@ requirements.lock
 *.pem
 knife.rb
 **/.chef/syntaxcache
+*.lock.json
 
 .DS_Store
