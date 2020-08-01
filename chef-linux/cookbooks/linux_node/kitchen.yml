@@ -13,6 +13,9 @@ platforms:
   - name: centos-8
 
 suites:
-  - name: info
+  - name: webserver
     provisioner:
-      policyfile_path: policyfiles/nodeinfo.rb
+      policyfile_path: policyfiles/webserver.rb
+    verifier:
+        inspec_tests:
+          - test/integration/default/webserver_test.rb
