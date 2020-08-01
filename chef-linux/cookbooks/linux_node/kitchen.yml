@@ -13,8 +13,6 @@ platforms:
   - name: centos-8
 
 suites:
-  - name: default
-    verifier:
-      inspec_tests:
-        - test/integration/default
-    attributes:
+  - name: info
+    provisioner:
+      policyfile_path: policyfiles/nodeinfo.rb
