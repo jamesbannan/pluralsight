@@ -7,23 +7,27 @@
 require 'spec_helper'
 
 describe 'linux_node::nodeinfo' do
-  context 'When all attributes are default, on Ubuntu 20.04' do
-    # for a complete list of available platforms and versions see:
-    # https://github.com/chefspec/fauxhai/blob/master/PLATFORMS.md
-    platform 'ubuntu', '20.04'
 
-    it 'converges successfully' do
-      expect { chef_run }.to_not raise_error
+  context 'When all attributes are default, on Ubuntu 20.04' do
+
+    let(:chef_run) { ChefSpec::SoloRunner.new(platform: 'ubuntu', version: '20.04').converge(described_recipe) }
+
+    it 'creates a template with the default action' do
+      expect(chef_run).to create_template('/tmp/node-info.txt')
+      expect(chef_run).to_not create_template('/tmp/not-node-info.txt')
     end
+  
   end
 
   context 'When all attributes are default, on CentOS 8' do
-    # for a complete list of available platforms and versions see:
-    # https://github.com/chefspec/fauxhai/blob/master/PLATFORMS.md
-    platform 'centos', '8'
 
-    it 'converges successfully' do
-      expect { chef_run }.to_not raise_error
+    let(:chef_run) { ChefSpec::SoloRunner.new(platform: 'centos', version: '8').converge(described_recipe) }
+
+    it 'creates a template with the default action' do
+      expect(chef_run).to create_template('/tmp/node-info.txt')
+      expect(chef_run).to_not create_template('/tmp/not-node-info.txt')
     end
-  end
+    
+  end  
+
 end
