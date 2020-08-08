@@ -44,5 +44,6 @@ knife.rb
 *.lock.json
 
 **/output/*
+**/.kitchen/logs
 
 .DS_Store
