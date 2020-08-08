@@ -1,0 +1,20 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+
+verifier:
+  name: inspec
+
+platforms:
+  - name: ubuntu-18.04
+  - name: centos-7
+
+suites:
+  - name: devsec
+    verifier:
+      inspec_tests:
+        - name: linux-baseline
+          url: https://github.com/dev-sec/linux-baseline

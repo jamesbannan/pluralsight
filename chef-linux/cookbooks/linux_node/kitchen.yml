@@ -1,0 +1,19 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+  data_bags_path: ../../data_bags
+  encrypted_data_bag_secret_key_path: /tmp/secret_key
+
+verifier:
+  name: inspec
+
+platforms:
+  - name: ubuntu-20.04
+
+suites:
+  - name: info
+    provisioner:
+      policyfile_path: policyfiles/userinfo.rb
