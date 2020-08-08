@@ -27,7 +27,7 @@ describe 'linux_node::nodeinfo' do
       expect(chef_run).to create_template('/tmp/node-info.txt')
       expect(chef_run).to_not create_template('/tmp/not-node-info.txt')
     end
-    
-  end  
+
+  end
 
 end

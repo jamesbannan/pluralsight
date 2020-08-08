@@ -4,6 +4,8 @@ driver:
 
 provisioner:
   name: chef_zero
+  data_bags_path: ../../data_bags
+  encrypted_data_bag_secret_key_path: /tmp/secret_key
 
 verifier:
   name: inspec
@@ -14,7 +16,4 @@ platforms:
 suites:
   - name: info
     provisioner:
-      policyfile_path: policyfiles/nodeinfo.rb
-    verifier:
-        inspec_tests:
-          - test/integration/default/nodeinfo_test.rb
+      policyfile_path: policyfiles/userinfo.rb
