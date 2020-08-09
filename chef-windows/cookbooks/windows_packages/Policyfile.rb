@@ -14,3 +14,4 @@ run_list 'windows_packages::default'
 
 # Specify a custom source for a single cookbook:
 cookbook 'windows_packages', path: '.'
+cookbook 'chocolatey', '~> 2.0.1', :supermarket
