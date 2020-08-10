@@ -14,4 +14,5 @@ run_list 'windows_node::default'
 
 # Specify a custom source for a single cookbook:
 cookbook 'windows_node', path: '.'
+cookbook 'windows_packages', path: '../windows_packages'
 cookbook 'windows', '~> 7.0.0'
