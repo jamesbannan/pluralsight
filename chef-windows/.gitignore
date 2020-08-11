@@ -62,9 +62,12 @@ nodes
 # build-common/
 # output/
 
-# ## VM images
-# *.vhd
-# *.vhdx
+## VM images
+*.vhd
+*.vhdx
+*.box
+*.iso
+*.iso.lock
 
 # ## Pester Test summary
 # Test.xml
