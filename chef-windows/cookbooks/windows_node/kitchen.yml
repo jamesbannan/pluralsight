@@ -19,8 +19,6 @@ platforms:
       vm_hostname: win2016
 
 suites:
-  - name: default
-    verifier:
-      inspec_tests:
-        - test/integration/default
-    attributes:
+  - name: info
+    provisioner:
+      policyfile_path: policyfiles/nodeinfo.rb
