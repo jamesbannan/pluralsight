@@ -9,15 +9,19 @@ verifier:
   name: inspec
 
 platforms:
+  - name: windows-2019
+    driver:
+      box: StefanScherer/windows_2019
+      vm_hostname: win2019
   - name: windows-2016
     driver:
       box: StefanScherer/windows_2016
-      vm_hostname: win2016
+      vm_hostname: win2016   
 
 suites:
-  - name: iis
+  - name: info
     provisioner:
-      policyfile_path: policyfiles/webserver.rb
+      policyfile_path: policyfiles/nodeinfo.rb
     verifier:
       inspec_tests:
-        - test/integration/default/webserver_test.rb
+        - test/integration/default/nodeinfo_test.rb
