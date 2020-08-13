@@ -6,24 +6,26 @@
 
 require 'spec_helper'
 
-describe 'windows_node::nodeinfo' do
-  context 'When all attributes are default, on Ubuntu 20.04' do
-    # for a complete list of available platforms and versions see:
-    # https://github.com/chefspec/fauxhai/blob/master/PLATFORMS.md
-    platform 'ubuntu', '20.04'
+foldername = 'C:/Windows/Temp'
+filename = 'node-info.txt'
+notfilename = 'not-node-info.txt'
 
-    it 'converges successfully' do
-      expect { chef_run }.to_not raise_error
+describe 'windows_node::nodeinfo' do
+  context 'When all attributes are default, on Windows 2019' do
+    let(:chef_run) { ChefSpec::SoloRunner.new(platform: 'windows', version: '2019').converge(described_recipe) }
+
+    it 'creates a template with the default action' do
+      expect(chef_run).to create_template("#{foldername}/#{filename}")
+      expect(chef_run).to_not create_template("#{foldername}/#{notfilename}")
     end
   end
 
-  context 'When all attributes are default, on CentOS 8' do
-    # for a complete list of available platforms and versions see:
-    # https://github.com/chefspec/fauxhai/blob/master/PLATFORMS.md
-    platform 'centos', '8'
+  context 'When all attributes are default, on Windows 2016' do
+    let(:chef_run) { ChefSpec::SoloRunner.new(platform: 'windows', version: '2016').converge(described_recipe) }
 
-    it 'converges successfully' do
-      expect { chef_run }.to_not raise_error
+    it 'creates a template with the default action' do
+      expect(chef_run).to create_template("#{foldername}/#{filename}")
+      expect(chef_run).to_not create_template("#{foldername}/#{notfilename}")
     end
   end
 end

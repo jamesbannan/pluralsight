@@ -6,10 +6,10 @@
 
 folderpath = 'C:/Windows/Temp'
 
-# template "#{folderpath}/node-info.txt" do
-#   source 'node-info.txt.erb'
-# end
-
-file "#{folderpath}/node-info.txt" do
-  content node_info
+template "#{folderpath}/node-info.txt" do
+  source 'node-info.txt.erb'
 end
+
+# file "#{folderpath}/node-info.txt" do
+#   content node_info
+# end

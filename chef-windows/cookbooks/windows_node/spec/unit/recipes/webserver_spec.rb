@@ -7,20 +7,16 @@
 require 'spec_helper'
 
 describe 'windows_node::webserver' do
-  context 'When all attributes are default, on Ubuntu 20.04' do
-    # for a complete list of available platforms and versions see:
-    # https://github.com/chefspec/fauxhai/blob/master/PLATFORMS.md
-    platform 'ubuntu', '20.04'
+  context 'When all attributes are default, on Windows Server 2019' do
+    platform 'windows', '2019'
 
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
     end
   end
 
-  context 'When all attributes are default, on CentOS 8' do
-    # for a complete list of available platforms and versions see:
-    # https://github.com/chefspec/fauxhai/blob/master/PLATFORMS.md
-    platform 'centos', '8'
+  context 'When all attributes are default, on Windows Server 2016' do
+    platform 'windows', '2016'
 
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
