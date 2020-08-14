@@ -19,9 +19,12 @@ platforms:
       vm_hostname: win2016   
 
 suites:
-  - name: info
-    provisioner:
-      policyfile_path: policyfiles/nodeinfo.rb
+  - name: devsec
     verifier:
       inspec_tests:
-        - test/integration/default/nodeinfo_test.rb
+        - name: windows-baseline
+          url: https://github.com/dev-sec/windows-baseline
+      controls:
+        - windows-018
+        - windows-019
+        - windows-020
