@@ -12,19 +12,11 @@ platforms:
   - name: windows-2019
     driver:
       box: StefanScherer/windows_2019
-      vm_hostname: win2019
-  - name: windows-2016
-    driver:
-      box: StefanScherer/windows_2016
-      vm_hostname: win2016   
+      vm_hostname: win2019   
 
 suites:
-  - name: devsec
-    verifier:
-      inspec_tests:
-        - name: windows-baseline
-          url: https://github.com/dev-sec/windows-baseline
-      controls:
-        - windows-018
-        - windows-019
-        - windows-020
+  - name: info
+    provisioner:
+      data_bags_path: ../../data_bags
+      encrypted_data_bag_secret_key_path: C:/Windows/Temp/secret_key
+      policyfile_path: policyfiles/userinfo.rb
