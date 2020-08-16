@@ -1,0 +1,22 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+
+verifier:
+  name: inspec
+
+platforms:
+  - name: windows-2019
+    driver:
+      box: StefanScherer/windows_2019
+      vm_hostname: win2019   
+
+suites:
+  - name: info
+    provisioner:
+      data_bags_path: ../../data_bags
+      encrypted_data_bag_secret_key_path: C:/Windows/Temp/secret_key
+      policyfile_path: policyfiles/userinfo.rb
