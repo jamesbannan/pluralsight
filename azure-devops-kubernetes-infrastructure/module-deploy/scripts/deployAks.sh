@@ -9,7 +9,7 @@ fi
 
 # Create Resource Group
 groupName='demo-aks'
-groupLocation='Australia East'
+groupLocation='eastus'
 group=$(az group create --name ${groupName} --location "${groupLocation}" --verbose)
 
 # Deploy Log Analytics Workspace
@@ -38,7 +38,7 @@ az aks create \
     --service-principal $(echo $sp | jq .appId -r) \
     --client-secret $(echo $sp | jq .password -r) \
     --node-count 1 \
-    --node-vm-size Standard_DS1_v2 \
+    --node-vm-size Standard_DS2_v2 \
     --enable-addons monitoring \
     --generate-ssh-keys \
     --workspace-resource-id ${logAnalyticsId} \
