@@ -9,7 +9,7 @@ az login
 
 ### Define Deployment Variables
 appNamePrefix='crf'
-resourceGroupName="$appNamePrefix-simple-paas"
+resourceGroupName="${appNamePrefix}-simple-paas"
 resourceGroupLocation='eastus'
 
 resourceProviderNamespace='Microsoft.Web'
@@ -26,8 +26,8 @@ resourceGroup=$(az group create \
     --verbose)
 
 ### Create App Service Plan
-resourceGroupId=$(echo $group | jq .id -r | shasum)
-nameSuffix="${groupId:0:10}"
+resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
+nameSuffix="${resourceGroupId:0:10}"
 appServicePlanName="${appNamePrefix}-${nameSuffix}"
 
 az appservice plan create \
@@ -43,7 +43,6 @@ webAppName="${appNamePrefix}-${nameSuffix}"
 az webapp create \
     --resource-group ${resourceGroupName} \
     --name ${webAppName} \
-    --location ${resourceGroupLocation} \
     --plan ${appServicePlanName} \
     --verbose
     
