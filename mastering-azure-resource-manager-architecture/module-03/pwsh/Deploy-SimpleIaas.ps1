@@ -28,7 +28,6 @@ $storageAccountNamePrefix = 'storage'
 $storageAccountType = 'Standard_LRS'
 $storageAccountName = $storageAccountNamePrefix + ($storageAccountType.Replace('Standard_','')).ToLower() + $randomString
 
-
 ### Get ARM Provider Locations
 ((Get-AzResourceProvider `
     -ProviderNamespace "$resourceProviderNamespace").ResourceTypes | `
@@ -53,7 +52,7 @@ $vNetSubnet2 = New-AzVirtualNetworkSubnetConfig `
     -Verbose
 
 ### Create Virtual Network
-$vNet = New-AzVirtualNetwork `
+New-AzVirtualNetwork `
     -ResourceGroupName $resourceGroup.ResourceGroupName `
     -Location $resourceGroup.Location `
     -Name $vNetName `
@@ -62,7 +61,7 @@ $vNet = New-AzVirtualNetwork `
     -Verbose -Force
 
 ### Create Storage Account
-$storageAccount = New-AzStorageAccount `
+New-AzStorageAccount `
     -ResourceGroupName $resourceGroup.ResourceGroupName `
     -Location $resourceGroup.Location `
     -Name $storageAccountName `
