@@ -21,14 +21,14 @@ for i in "${locations[@]}"; do
     resourceGroup=$(az group show --name ${resourceGroupName} --output json)
     resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
 
-    acrName="${appNamePrefix}-acr-${resourceGroupLocation}"
+    acrName="${appNamePrefix}acr${resourceGroupLocation}"
 
     az acr create \
         --resource-group $(echo $resourceGroup | jq .name -r) \
         --name ${acrName} \
         --sku standard \
         --location $(echo $resourceGroup | jq .location -r) \
-        --output tsv
+        --output table
 done
 
 ### Push Image to Container Registries
@@ -37,9 +37,10 @@ for i in "${locations[@]}"; do
     resourceGroup=$(az group show --name ${resourceGroupName} --output json)
     resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
 
-    acrName="${appNamePrefix}-acr-${resourceGroupLocation}"
+    acrName="${appNamePrefix}acr${resourceGroupLocation}"
     acr=$(az acr show --name ${acrName} --resource-group ${resourceGroupName} --output json)
 
     az acr login --name ${acrName} --output tsv
-    > docker push myregistry.azurecr.io/samples <
+    docker tag carvedrockweb:latest "${acrName}.azurecr.io/carvedrockweb:latest"
+    docker push "${acrName}.azurecr.io/carvedrockweb:latest"
 done
