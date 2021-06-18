@@ -18,7 +18,8 @@ locations=(
 ### Create ARM Resource Groups
 for i in "${locations[@]}"; do
     resourceGroupName="${appNamePrefix}-paas-${i}"
-    az group create --name ${resourceGroupName} --location ${i} --output tsv
+    az group create --name ${resourceGroupName} --location ${i} \
+    --output table
 done
 
 ### Create App Service Plans
@@ -35,7 +36,7 @@ for i in "${locations[@]}"; do
         --location $(echo $resourceGroup | jq .location -r) \
         --sku S1 \
         --is-linux \
-        --output tsv
+        --output table
 done
 
 ### Create Web Apps
