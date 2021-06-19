@@ -20,8 +20,10 @@ for i in "${locations[@]}"; do
     resourceGroupName="${appNamePrefix}-paas-${i}"
     resourceGroup=$(az group show --name ${resourceGroupName} --output json)
     resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
+    resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
+    nameSuffix="${resourceGroupId:0:4}" 
 
-    acrName="${appNamePrefix}acr${resourceGroupLocation}"
+    acrName="${appNamePrefix}acr${resourceGroupLocation}${nameSuffix}"
 
     az acr create \
         --resource-group $(echo $resourceGroup | jq .name -r) \
@@ -36,8 +38,10 @@ for i in "${locations[@]}"; do
     resourceGroupName="${appNamePrefix}-paas-${i}"
     resourceGroup=$(az group show --name ${resourceGroupName} --output json)
     resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
+    resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
+    nameSuffix="${resourceGroupId:0:4}" 
 
-    acrName="${appNamePrefix}acr${resourceGroupLocation}"
+    acrName="${appNamePrefix}acr${resourceGroupLocation}${nameSuffix}"
     acr=$(az acr show --name ${acrName} --resource-group ${resourceGroupName} --output json)
 
     az acr login --name ${acrName} --output tsv

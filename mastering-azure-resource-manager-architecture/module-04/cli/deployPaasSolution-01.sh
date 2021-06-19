@@ -44,9 +44,11 @@ for i in "${locations[@]}"; do
     resourceGroupName="${appNamePrefix}-paas-${i}"
     resourceGroup=$(az group show --name ${resourceGroupName} --output json)
     resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
+    resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
+    nameSuffix="${resourceGroupId:0:4}" 
 
     webAppName="${appNamePrefix}-web-${resourceGroupLocation}"
-    appServicePlanName="${appNamePrefix}-plan-${resourceGroupLocation}"
+    appServicePlanName="${appNamePrefix}-plan-${resourceGroupLocation}-${nameSuffix}"
     
     az webapp create \
         --resource-group $(echo $resourceGroup | jq .name -r) \
