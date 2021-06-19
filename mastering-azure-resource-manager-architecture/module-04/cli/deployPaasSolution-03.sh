@@ -15,42 +15,42 @@ locations=(
     "westus"
 )
 
-### Assign a managed service identity to Web Apps
+### Assign a user identity to Web Apps
 for i in "${locations[@]}"; do
     resourceGroupName="${appNamePrefix}-paas-${i}"
     resourceGroup=$(az group show --name ${resourceGroupName} --output json)
+    resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
+    resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
+    nameSuffix="${resourceGroupId:0:4}" 
 
-    webAppName="${appNamePrefix}-web-${resourceGroupLocation}"
+    webAppName="${appNamePrefix}-web-${resourceGroupLocation}-${nameSuffix}"
+    identityName="${webAppName}-identity"
+
+    az identity create \
+        --name $identityName \
+        --resource-group ${resourceGroupName} \
+        --location ${resourceGroupLocation} \
+        --output none
+
+    identityId=$(az identity show --resource-group ${resourceGroupName} --name ${identityName} --query id --output tsv)
+    identityClientId=$(az identity show --resource-group ${resourceGroupName} --name ${identityName} --query clientId --output tsv)
     
     az webapp identity assign \
         --resource-group $(echo $resourceGroup | jq .name -r) \
         --name ${webAppName} \
-        --query principalId \
-        --output tsv
+        --identities ${identityId} \
+        --output none
 
-    config=$(az webapp show \
-        --resource-group $(echo $resourceGroup | jq .name -r) \
-        --name ${webAppName} \ 
-        --query id 
-        --output tsv) + "/config/web"
-done
-
-### Use Web Apps MSI for Docker pull operations
-for i in "${locations[@]}"; do
-    resourceGroupName="${appNamePrefix}-paas-${i}"
-    resourceGroup=$(az group show --name ${resourceGroupName} --output json)
-
-    webAppName="${appNamePrefix}-web-${resourceGroupLocation}"
-
-    config=$(az webapp show \
-        --resource-group $(echo $resourceGroup | jq .name -r) \
-        --name ${webAppName} \ 
-        --query id 
-        --output tsv) + "/config/web"
+    webConfig=$(az webapp show --resource-group ${resourceGroupName} --name ${webAppName} --query id --output tsv)"/config/web"
 
     az resource update \
-        --ids ${config} \
+        --ids ${webConfig} \
         --set properties.acrUseManagedIdentityCreds=True \
+        --output none
+
+    az resource update \
+        --ids ${webConfig} \
+        --set properties.AcrUserManagedIdentityID=${identityClientId} \
         --output none
 done
 
@@ -58,9 +58,13 @@ done
 for i in "${locations[@]}"; do
     resourceGroupName="${appNamePrefix}-paas-${i}"
     resourceGroup=$(az group show --name ${resourceGroupName} --output json)
+    resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
+    resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
+    nameSuffix="${resourceGroupId:0:4}" 
 
-    acrName="${appNamePrefix}-acr-${resourceGroupLocation}"
-    webAppName="${appNamePrefix}-web-${resourceGroupLocation}"
+    acrName="${appNamePrefix}acr${resourceGroupLocation}${nameSuffix}"
+    webAppName="${appNamePrefix}-web-${resourceGroupLocation}-${nameSuffix}"
+    identityName="${webAppName}-identity"
 
     acrId=$(az acr show \
         --resource-group $(echo $resourceGroup | jq .name -r) \
@@ -68,24 +72,15 @@ for i in "${locations[@]}"; do
         --query id \
         --output tsv)
 
-    identityId=$(az webapp identity assign \
-        --resource-group $(echo $resourceGroup | jq .name -r) \
-        --name ${webAppName} \
+    identityPrincpalId=$(az identity show \
+        --resource-group ${resourceGroupName} \
+        --name ${identityName} \
         --query principalId \
         --output tsv)
 
     az role assignment create \
-        --assignee ${identityId} \
+        --assignee ${identityPrincpalId} \
         --scope ${acrId} \
         --role acrpull \
-        --output tsv
+        --output json
 done
-
-# Step 3: Configure WebApp to pull image:tag from ACR
-# Modify for your environment
-ACR_URL=$(az acr show -g $RG_Name --n $ACR_Name --query loginServer --output tsv)
-Image="myapp:latest"
-FX_Version="Docker|"$ACR_URL"/"$Image
-
-#Configure the ACR, Image and Tag to pull
-az resource update --ids $Webapp_Config --set properties.linuxFxVersion=$FX_Version -o none --force-string
