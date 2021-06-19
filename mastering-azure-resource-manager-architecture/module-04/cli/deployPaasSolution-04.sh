@@ -15,8 +15,51 @@ locations=(
     "westus"
 )
 
-### Configure WebApp to pull image:tag from ACR
+### Assign a user identity to Web Apps
 for i in "${locations[@]}"; do
+    # Define Deployment Variables
+    resourceGroupName="${appNamePrefix}-paas-${i}"
+    resourceGroup=$(az group show --name ${resourceGroupName} --output json)
+    resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
+    resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
+    nameSuffix="${resourceGroupId:0:4}" 
+
+    webAppName="${appNamePrefix}-web-${resourceGroupLocation}-${nameSuffix}"
+    identityName="${webAppName}-identity"
+
+    # Create User-Assigned Identity
+    az identity create \
+        --name $identityName \
+        --resource-group ${resourceGroupName} \
+        --location ${resourceGroupLocation} \
+        --output none
+
+    identityId=$(az identity show --resource-group ${resourceGroupName} --name ${identityName} --query id --output tsv)
+    identityClientId=$(az identity show --resource-group ${resourceGroupName} --name ${identityName} --query clientId --output tsv)
+    
+    # Assign Identity to Web App
+    az webapp identity assign \
+        --resource-group $(echo $resourceGroup | jq .name -r) \
+        --name ${webAppName} \
+        --identities ${identityId} \
+        --output none
+
+    webConfig=$(az webapp show --resource-group ${resourceGroupName} --name ${webAppName} --query id --output tsv)"/config/web"
+
+    az resource update \
+        --ids ${webConfig} \
+        --set properties.acrUseManagedIdentityCreds=True \
+        --output none
+
+    az resource update \
+        --ids ${webConfig} \
+        --set properties.AcrUserManagedIdentityID=${identityClientId} \
+        --output none
+done
+
+### Grant ACR access to the Web App identity
+for i in "${locations[@]}"; do
+    # Define Deployment Variables
     resourceGroupName="${appNamePrefix}-paas-${i}"
     resourceGroup=$(az group show --name ${resourceGroupName} --output json)
     resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
@@ -25,23 +68,25 @@ for i in "${locations[@]}"; do
 
     acrName="${appNamePrefix}acr${resourceGroupLocation}${nameSuffix}"
     webAppName="${appNamePrefix}-web-${resourceGroupLocation}-${nameSuffix}"
+    identityName="${webAppName}-identity"
 
-    acrUri=$(az acr show \
+    # Retrieve Identity Details
+    acrId=$(az acr show \
         --resource-group $(echo $resourceGroup | jq .name -r) \
         --name ${acrName} \
-        --query loginServer \
+        --query id \
         --output tsv)
 
-    image="carvedrockweb:latest"
-    fxVersion="Docker|"${acrUri}"/"${image}
+    identityPrincpalId=$(az identity show \
+        --resource-group ${resourceGroupName} \
+        --name ${identityName} \
+        --query principalId \
+        --output tsv)
 
-    webConfig=$(az webapp show --resource-group ${resourceGroupName} --name ${webAppName} --query id --output tsv)"/config/web"
-
-    az resource update \
-        --ids $webConfig \
-        --set properties.linuxFxVersion=$fxVersion \
-        --output json \
-        --force-string
-    
-    az webapp restart --resource-group ${resourceGroupName} --name ${webAppName}
+    # Assign RBAC on ACR
+    az role assignment create \
+        --assignee ${identityPrincpalId} \
+        --scope ${acrId} \
+        --role acrpull \
+        --output json
 done

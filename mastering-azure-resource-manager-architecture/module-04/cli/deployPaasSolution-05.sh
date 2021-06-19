@@ -10,38 +10,41 @@
 
 ### Define Deployment Variables
 appNamePrefix='crf'
-resourceGroupName="${appNamePrefix}-paas-eastus"
-resourceGroup=$(az group show --name ${resourceGroupName})
-resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
-nameSuffix="${resourceGroupId:0:4}"
+locations=(
+    "eastus"
+    "westus"
+)
 
-### Create Azure Front Door
-frontDoorName="${appNamePrefix}-paas-frontend-${nameSuffix}"
-webApp1Uri="${appNamePrefix}-web-eastus-${nameSuffix}.azurewebsites.net"
-webApp2Uri="${appNamePrefix}-web-westus-${nameSuffix}.azurewebsites.net"
+### Configure WebApp to pull image:tag from ACR
+for i in "${locations[@]}"; do
+    # Define Deployment Variables
+    resourceGroupName="${appNamePrefix}-paas-${i}"
+    resourceGroup=$(az group show --name ${resourceGroupName} --output json)
+    resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
+    resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
+    nameSuffix="${resourceGroupId:0:4}" 
 
-az network front-door create \
-    --resource-group ${resourceGroupName} \
-    --name ${frontDoorName} \
-    --accepted-protocols Https \
-    --backend-address ${webApp1Uri} \
-    --forwarding-protocol HttpsOnly
+    acrName="${appNamePrefix}acr${resourceGroupLocation}${nameSuffix}"
+    webAppName="${appNamePrefix}-web-${resourceGroupLocation}-${nameSuffix}"
 
-az network front-door backend-pool backend add \
-    --resource-group ${resourceGroupName} \
-    --front-door-name ${frontDoorName} \
-    --pool-name DefaultBackendPool \
-    --address ${webApp2Uri} \
-    --backend-host-header ${webApp2Uri}
+    # Retrieve ACR Details
+    acrUri=$(az acr show \
+        --resource-group $(echo $resourceGroup | jq .name -r) \
+        --name ${acrName} \
+        --query loginServer \
+        --output tsv)
 
-### Create HTTP to HTTPS Redirect Rule
-az network front-door routing-rule create \
-    --resource-group ${resourceGroupName} \
-    --front-door-name ${frontDoorName} \
-    --name HttpToHttpsRedirect \
-    --frontend-endpoints DefaultFrontendEndpoint \
-    --accepted-protocols Http \
-    --route-type Redirect \
-    --redirect-protocol HttpsOnly \
-    --redirect-type Found
+    image="carvedrockweb:latest"
+    fxVersion="Docker|"${acrUri}"/"${image}
 
+    webConfig=$(az webapp show --resource-group ${resourceGroupName} --name ${webAppName} --query id --output tsv)"/config/web"
+
+    # Update Web App to pull custom Docker image
+    az resource update \
+        --ids $webConfig \
+        --set properties.linuxFxVersion=$fxVersion \
+        --output json \
+        --force-string
+    
+    az webapp restart --resource-group ${resourceGroupName} --name ${webAppName}
+done
