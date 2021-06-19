@@ -19,9 +19,12 @@ locations=(
 for i in "${locations[@]}"; do
     resourceGroupName="${appNamePrefix}-paas-${i}"
     resourceGroup=$(az group show --name ${resourceGroupName} --output json)
+    resourceGroupLocation=$(echo $resourceGroup | jq .location -r)
+    resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
+    nameSuffix="${resourceGroupId:0:4}" 
 
-    acrName="${appNamePrefix}-acr-${resourceGroupLocation}"
-    webAppName="${appNamePrefix}-web-${resourceGroupLocation}"
+    acrName="${appNamePrefix}acr${resourceGroupLocation}${nameSuffix}"
+    webAppName="${appNamePrefix}-web-${resourceGroupLocation}-${nameSuffix}"
 
     acrUri=$(az acr show \
         --resource-group $(echo $resourceGroup | jq .name -r) \
@@ -29,23 +32,16 @@ for i in "${locations[@]}"; do
         --query loginServer \
         --output tsv)
 
-    image="myapp:latest"
+    image="carvedrockweb:latest"
     fxVersion="Docker|"${acrUri}"/"${image}
 
-    identityId=$(az webapp identity show \
-        --resource-group $(echo $resourceGroup | jq .name -r) \
-        --name ${webAppName} \
-        --output tsv)
-
-    config=$(az webapp show \
-        --resource-group $(echo $resourceGroup | jq .name -r) \
-        --name ${webAppName} \ 
-        --query id 
-        --output tsv) + "/config/web"
+    webConfig=$(az webapp show --resource-group ${resourceGroupName} --name ${webAppName} --query id --output tsv)"/config/web"
 
     az resource update \
-        --ids $config \
+        --ids $webConfig \
         --set properties.linuxFxVersion=$fxVersion \
-        --output none \
+        --output json \
         --force-string
+    
+    az webapp restart --resource-group ${resourceGroupName} --name ${webAppName}
 done
