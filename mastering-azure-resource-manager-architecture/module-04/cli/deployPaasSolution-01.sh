@@ -47,8 +47,8 @@ for i in "${locations[@]}"; do
     resourceGroupId=$(echo $resourceGroup | jq .id -r | shasum)
     nameSuffix="${resourceGroupId:0:4}" 
 
-    webAppName="${appNamePrefix}-web-${resourceGroupLocation}"
-    appServicePlanName="${appNamePrefix}-plan-${resourceGroupLocation}-${nameSuffix}"
+    webAppName="${appNamePrefix}-web-${resourceGroupLocation}-${nameSuffix}"
+    appServicePlanName="${appNamePrefix}-plan-${resourceGroupLocation}"
     
     az webapp create \
         --resource-group $(echo $resourceGroup | jq .name -r) \
