@@ -58,6 +58,5 @@ for i in "${locations[@]}"; do
         --resource-group $(echo $resourceGroup | jq .name -r) \
         --name ${webAppName} \
         --plan ${appServicePlanName} \
-        --deployment-container-image-name nginx \
-        --verbose
+        --deployment-container-image-name nginx
 done
