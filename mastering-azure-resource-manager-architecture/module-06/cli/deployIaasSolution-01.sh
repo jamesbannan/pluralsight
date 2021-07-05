@@ -60,3 +60,40 @@ az vm create \
     --admin-password ${adminPassword} \
     --nics ${nicName} \
     --os-disk-name ${osDiskName}
+
+### Enable resource diagnostic settings
+# Define Deployment Variables
+resourceGroupName="${appNamePrefix}-iaas-${location}"
+
+vm=$(az vm list --resource-group ${resourceGroupName})
+vmName=$(echo $vm | jq '.[0].name' -r)
+vmResourceId=$(echo $vm | jq '.[0].id' -r)
+
+storageAccount=$(az storage account list --resource-group ${resourceGroupName})
+storageAccountName=$(echo $storageAccount | jq '.[0].name' -r)
+
+date=$(date -v+10y -u "+%Y-%m-%dT%H:%M:%SZ") # MacOS
+date=$(date -d "+10 years" -u "+%Y-%m-%dT%H:%M:%SZ") # Linux
+
+# Generate diagnostics configuration
+diagnosticsConfig=$(az vm diagnostics get-default-config --is-windows-os \
+    | sed "s#__DIAGNOSTIC_STORAGE_ACCOUNT__#${storageAccountName}#g" \
+    | sed "s#__VM_OR_VMSS_RESOURCE_ID__#${vmResourceId}#g")
+
+# Generate SAS token
+sasToken=$(az storage account generate-sas \
+    --account-name ${storageAccountName} \
+    --expiry ${date} \
+    --permissions acuw \
+    --resource-types co \
+    --services bt \
+    --https-only \
+    --output tsv)
+
+protectedSettings="{'storageAccountName': '${storageAccountName}', 'storageAccountSasToken': '${sasToken}'}"
+
+az vm diagnostics set \
+    --resource-group ${resourceGroupName} \
+    --settings ${diagnosticsConfig} \
+    --protected-settings ${protectedSettings} \
+    --vm-name ${vmName}
