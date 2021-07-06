@@ -5,8 +5,24 @@ packages:
   - nodejs
   - npm
 write_files:
-  - owner: www-data:www-data
-    path: /etc/nginx/sites-available/default/index.html
+  - owner: root:root
+    path: /etc/nginx/sites-enabled/default
+    content: |
+      server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name _;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+      }
+  - owner: root:root
+    path: /var/www/html/index.html
     content: |
       <!DOCTYPE html>
       <html lang="en">
@@ -212,8 +228,8 @@ write_files:
       </div>
       </body>
       </html>
-  - owner: www-data:www-data
-    path: /etc/nginx/sites-available/default/css/index.html
+  - owner: root:root
+    path: /var/www/html/css/main.css
     content: |
       /* HEADER */
       .header-nav--nav {border: 0; border-bottom: 1px solid #a0a0a0; margin-bottom: 0;}
