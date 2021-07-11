@@ -4,7 +4,7 @@
 #
 ###############################
 
-### Assign resource roles to Lab User
+### Assign Azure Policy
 # Get Azure Policy
 $policyDescription = 'Allowed locations for resource groups'
 $policy = Get-AzPolicyDefinition | Where-Object {$_.Properties.DisplayName -eq "$policyDescription"}
