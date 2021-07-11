@@ -6,7 +6,8 @@
 
 ### Assign resource roles to Lab User
 # Get user details
-$userDetails = Get-AzADUser | Where-Object {$_.UserPrincipalName -like 'labuser01*'}
+$userDetails = Get-AzADUser `
+ | Where-Object {$_.UserPrincipalName -like 'labuser01*'}
 $userPrincipalName = $userDetails.UserPrincipalName
 
 # Deploy new custom role
