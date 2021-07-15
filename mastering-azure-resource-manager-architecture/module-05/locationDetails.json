@@ -1,0 +1,148 @@
+[
+    {
+        "Region": "Primary",
+        "Location": "westus",
+        "AddressPrefix": "172.16.0.0/20",
+        "Subnets": [
+            {
+                "Name": "AzureBastionSubnet",
+                "SubnetPrefix": "172.16.0.0/27",
+                "NsgRules": [
+                    {
+                        "Name": "AllowHttpsInbound",
+                        "Description": "Allow HTTPS access",
+                        "Access": "Allow",
+                        "Protocol": "Tcp",
+                        "Direction": "Inbound",
+                        "Priority": "120",
+                        "SourceAddressPrefix": "Internet",
+                        "SourcePortRange": "*",
+                        "DestinationAddressPrefix": "*",
+                        "DestinationPortRange": "443"
+                    },
+                    {
+                        "Name": "AllowGatewayManagerInbound",
+                        "Description": "Allow Bastion Gateway Manager access",
+                        "Access": "Allow",
+                        "Protocol": "Tcp",
+                        "Direction": "Inbound",
+                        "Priority": "130",
+                        "SourceAddressPrefix": "GatewayManager",
+                        "SourcePortRange": "*",
+                        "DestinationAddressPrefix": "*",
+                        "DestinationPortRange": "443"
+                    },
+                    {
+                        "Name": "AllowAzureLoadBalancerInbound",
+                        "Description": "Allow Azure Load Balancer access",
+                        "Access": "Allow",
+                        "Protocol": "Tcp",
+                        "Direction": "Inbound",
+                        "Priority": "140",
+                        "SourceAddressPrefix": "AzureLoadBalancer",
+                        "SourcePortRange": "*",
+                        "DestinationAddressPrefix": "*",
+                        "DestinationPortRange": "443"
+                    },
+                    {
+                        "Name": "AllowBastionHostCommunication",
+                        "Description": "Allow Azure Bastion Host access",
+                        "Access": "Allow",
+                        "Protocol": "*",
+                        "Direction": "Inbound",
+                        "Priority": "150",
+                        "SourceAddressPrefix": "VirtualNetwork",
+                        "SourcePortRange": "*",
+                        "DestinationAddressPrefix": "VirtualNetwork",
+                        "DestinationPortRange": "8080,5701"
+                    },
+                    {
+                        "Name": "AllowSshRdpOutbound",
+                        "Description": "Allow SSH and RDP communication",
+                        "Access": "Allow",
+                        "Protocol": "*",
+                        "Direction": "Outbound",
+                        "Priority": "100",
+                        "SourceAddressPrefix": "*",
+                        "SourcePortRange": "*",
+                        "DestinationAddressPrefix": "VirtualNetwork",
+                        "DestinationPortRange": "22,3389"
+                    },
+                    {
+                        "Name": "AllowAzureCloudOutbound",
+                        "Description": "Allow Azure Cloud communication",
+                        "Access": "Allow",
+                        "Protocol": "Tcp",
+                        "Direction": "Outbound",
+                        "Priority": "110",
+                        "SourceAddressPrefix": "*",
+                        "SourcePortRange": "*",
+                        "DestinationAddressPrefix": "AzureCloud",
+                        "DestinationPortRange": "443"
+                    },
+                    {
+                        "Name": "AllowBastionCommunication",
+                        "Description": "Allow Azure Bastion communication",
+                        "Access": "Allow",
+                        "Protocol": "*",
+                        "Direction": "Outbound",
+                        "Priority": "120",
+                        "SourceAddressPrefix": "VirtualNetwork",
+                        "SourcePortRange": "*",
+                        "DestinationAddressPrefix": "VirtualNetwork",
+                        "DestinationPortRange": "8080,5701"
+                    },
+                    {
+                        "Name": "AllowGetSessionInformation",
+                        "Description": "Allow Azure Bastion session communication",
+                        "Access": "Allow",
+                        "Protocol": "*",
+                        "Direction": "Outbound",
+                        "Priority": "130",
+                        "SourceAddressPrefix": "*",
+                        "SourcePortRange": "*",
+                        "DestinationAddressPrefix": "Internet",
+                        "DestinationPortRange": "80"
+                    }
+                ]
+            },
+            {
+                "Name": "AdminSubnet",
+                "SubnetPrefix": "172.16.1.0/25",
+                "NsgRules": [
+                    {
+                        "Name": "AllowRdp",
+                        "Description": "Allow RDP access",
+                        "Access": "Allow",
+                        "Protocol": "Tcp",
+                        "Direction": "Inbound",
+                        "Priority": "100",
+                        "SourceAddressPrefix": "172.16.0.0/27",
+                        "SourcePortRange": "*",
+                        "DestinationAddressPrefix": "*",
+                        "DestinationPortRange": "3389"
+                    }
+                ]
+            },
+            {
+                "Name": "GatewaySubnet",
+                "SubnetPrefix": "172.16.15.192/26"
+            }
+        ]
+    },
+    {
+        "Region": "Secondary",
+        "Location": "eastus",
+        "AddressPrefix": "172.17.0.0/20",
+        "Subnets": [
+            {
+                "Name": "AppSubnet",
+                "SubnetPrefix": "172.17.1.0/25"
+            },
+            {
+                "Name": "GatewaySubnet",
+                "SubnetPrefix": "172.17.15.192/26"
+            }
+        ]
+    }
+]
